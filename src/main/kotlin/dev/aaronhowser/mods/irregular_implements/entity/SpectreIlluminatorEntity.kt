@@ -1,6 +1,6 @@
 package dev.aaronhowser.mods.irregular_implements.entity
 
-import com.google.common.collect.HashMultimap
+import dev.aaronhowser.mods.irregular_implements.handler.SpectreIlluminationHandler
 import dev.aaronhowser.mods.irregular_implements.registry.ModEntityTypes
 import dev.aaronhowser.mods.irregular_implements.registry.ModItems
 import dev.aaronhowser.mods.irregular_implements.util.ClientUtil
@@ -10,6 +10,7 @@ import net.minecraft.nbt.CompoundTag
 import net.minecraft.network.syncher.EntityDataAccessor
 import net.minecraft.network.syncher.EntityDataSerializers
 import net.minecraft.network.syncher.SynchedEntityData
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
@@ -65,24 +66,23 @@ class SpectreIlluminatorEntity(
 	override fun onAddedToLevel() {
 		super.onAddedToLevel()
 
-		val chunkPos = ChunkPos(this.blockPosition())
-
-		illuminatedChunks[level()].add(chunkPos.toLong())
-
-		forceLightUpdates(level(), chunkPos)
+		val level = level()
+		if (level is ServerLevel) {
+			SpectreIlluminationHandler.setChunkIlluminated(level, blockPosition(), true)
+		}
 	}
 
 	//FIXME: Not being called on client from `/kill`?
 	override fun remove(reason: RemovalReason) {
 		super.remove(reason)
 
-		val chunkPos = ChunkPos(this.blockPosition())
-		illuminatedChunks[level()].remove(chunkPos.toLong())
+		val level = level()
+		if (level is ServerLevel) {
+			SpectreIlluminationHandler.setChunkIlluminated(level, blockPosition(), false)
 
-		forceLightUpdates(level(), chunkPos)
-
-		if (removalReason == RemovalReason.KILLED) {
-			OtherUtil.dropStackAt(ModItems.SPECTRE_ILLUMINATOR.toStack(), this)
+			if (removalReason == RemovalReason.KILLED) {
+				OtherUtil.dropStackAt(ModItems.SPECTRE_ILLUMINATOR.toStack(), this)
+			}
 		}
 	}
 
@@ -170,44 +170,6 @@ class SpectreIlluminatorEntity(
 
 		val ACTION_TIMER: EntityDataAccessor<Int> = SynchedEntityData.defineId(SpectreIlluminatorEntity::class.java, EntityDataSerializers.INT)
 		const val ACTION_TIMER_NBT = "ActionTimer"
-
-		private val illuminatedChunks: HashMultimap<Level, Long> = HashMultimap.create()
-
-		@JvmStatic
-		fun isChunkIlluminated(blockPos: BlockPos, blockAndTintGetter: BlockAndTintGetter): Boolean {
-			val level: Level = when (blockAndTintGetter) {
-				is Level -> blockAndTintGetter
-
-				// If it's something that can be accessed on server, but isn't a Level, return false before it tries to load client-only class
-				is CommonLevelAccessor -> return false
-
-				else -> ClientUtil.levelFromBlockAndTintGetter(blockAndTintGetter) ?: return false
-			}
-
-			val chunkPos = ChunkPos(blockPos)
-
-			return illuminatedChunks[level].contains(chunkPos.toLong())
-		}
-
-		//FIXME: For some reason it doesn't work super well in chunks that are mostly empty (possibly only effects superflat levels?)
-		//TODO: Study effect on lag, possibly only when the chunk loads the first time?
-		private fun forceLightUpdates(level: Level, chunkPos: ChunkPos) {
-			if (!level.isLoaded(chunkPos.worldPosition)) return
-
-			// +- 1 to also check edges
-			val minX = chunkPos.minBlockX - 1
-			val maxX = chunkPos.maxBlockX + 1
-			val minZ = chunkPos.minBlockZ - 1
-			val maxZ = chunkPos.maxBlockZ + 1
-			val minY = level.minBuildHeight
-			val maxY = level.maxBuildHeight
-
-			val iterable = BlockPos.betweenClosed(minX, minY, minZ, maxX, maxY, maxZ)
-
-			for (pos in iterable) {
-				level.chunkSource.lightEngine.checkBlock(pos.immutable())
-			}
-		}
 
 	}
 

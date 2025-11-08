@@ -73,30 +73,12 @@ object ModPacketHandler {
 			PaintBiomePacket.TYPE,
 			PaintBiomePacket.STREAM_CODEC
 		)
-	}
 
-	fun messageNearbyPlayers(packet: CustomPacketPayload, serverLevel: ServerLevel, origin: BlockPos, radius: Double) {
-		messageNearbyPlayers(packet, serverLevel, origin.center, radius)
-	}
-
-	fun messageNearbyPlayers(packet: CustomPacketPayload, serverLevel: ServerLevel, origin: Vec3, radius: Double) {
-		for (player in serverLevel.players()) {
-			if (player.position().closerThan(origin, radius)) {
-				messagePlayer(player, packet)
-			}
-		}
-	}
-
-	fun messagePlayer(player: ServerPlayer, packet: CustomPacketPayload) {
-		PacketDistributor.sendToPlayer(player, packet)
-	}
-
-	fun messageAllPlayers(packet: CustomPacketPayload) {
-		PacketDistributor.sendToAllPlayers(packet)
-	}
-
-	fun messageServer(packet: CustomPacketPayload) {
-		PacketDistributor.sendToServer(packet)
+		toClient(
+			registrar,
+			UpdateSpectreIlluminationPacket.TYPE,
+			UpdateSpectreIlluminationPacket.STREAM_CODEC
+		)
 	}
 
 	private fun <T : ModPacket> toClient(

@@ -1,9 +1,28 @@
+# 1.6.1
+
+### Added
+
+- Russian translation, thanks to BazZziliuS on Github
+
+### Changed
+
+- The Slime Cube now has a default radius of 0, so it only effects the chunk it's in
+
+### Fixed
+
+- The Slime Cube doesn't crash the server when placed now (#43)
+  - When making it, I reused a lot of code from the Rain Shield. Unfortunately, it was also checking for the Rain Shield's block property, instead of the Slime Cube's. That's fixed now.
+- The Slime Cube actually works now
+  - Aside from crashing, it also didn't actually work to begin with. I was packing a ChunkPos into a long and then treating it as a BlockPos, which does not work
+- Hopefully fixed a crash when something tries to access the Pitcher Plant's fluid capability while the level was loading, maybe (#41)
+
 # 1.6.0
 
 ### Added
 
 - Patchouli documentation
   - I had to update a Patchouli DataGen mod from 1.19 for this lol
+  - Not everything is documented, but most of it is. This update was getting a bit inflated and this is the biggest bottleneck, and I don't want to put off releasing all these changes and fixes just because I need to spend 5 more hours documenting every obscure item in the mod lol
 
 ### Changed
 
@@ -24,15 +43,23 @@
   - If there are, it waits for (distance in blocks / Bridge search speed) ticks and then teleports you
 - Ender Bridges now work if there's a block between it and the targeted Anchor
 - Upon emptying the Summoning Pendulum, it removes the data component entirely instead of just setting it to an empty entity nbt list
+- The Slime Cube's chunk radius is now configurable (it was before, but it was using the Rain Shield's radius)
+- Inverted Diaphaneous Blocks pulsate at an inverted amplitude as regular ones
+- Minor improvements to the Nature Core
+  - It no longer spawns mobs in the air
+  - It now plants saplings in a circle around it, rather than just on the -X -Z corner
 
 ### Fixed
 
+- Massively changed how Spectre Illumination works, which should hopefully fix all its issues and maybe make some more exciting new ones instead
+  - It's now a SavedData, synced using packets and stuff
 - Added mining particles to Glowing Mushrooms (#32)
 - Added an alias to ModBlockEntityTypes for `redstone_interface` -> `basic_redstone_interface` to prevent data loss, so 1.5.0 is no longer a breaking change
 - The Escape Rope no longer duplicates itself
 - Fixed the Obsidian Skull Ring not doing anything
   - It was looking for an Obsidian Skull in curio slots instead of the Ring
 - Fixed the Biome Capsule not using its saved biome for its color
+- Spectre Chargers should now charge the entire inventory, including armor, the offhand, and Curio slots (#35)
 
 # 1.5.0
 
